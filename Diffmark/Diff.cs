@@ -53,6 +53,9 @@ namespace Diffmark
                             ? rule.ConcatString + baseString
                             : baseString + rule.ConcatString;
                         continue;
+                    case DiffRuleType.ReplaceWord:
+                        baseString = ReplaceWord(baseString, rule.ConcatString, rule.Factor, rule.Prepend);
+                        continue;
                 }
             }
             return baseString;
@@ -73,6 +76,58 @@ namespace Diffmark
         {
             if (factor > baseString.Length) return String.Empty;
             return prepend ? baseString.Substring(factor) : baseString.Substring(0, baseString.Length - factor);
+        }
+
+        internal static string ReplaceWord(string baseString, string replacement, int factor, bool prepend)
+        {
+            int a = 0;
+            int b = 0;
+            int currentWordIndex = 0;
+            if (prepend)
+            {
+                while (currentWordIndex < factor)
+                {
+                    a = b;
+                    while (a < baseString.Length && !Char.IsLetterOrDigit(baseString[a]))
+                    {
+                        a++;
+                    }
+
+                    if (a >= baseString.Length) return baseString;
+
+                    b = a;
+                    while (b < baseString.Length && Char.IsLetterOrDigit(baseString[b]))
+                    {
+                        b++;
+                    }
+
+                    currentWordIndex++;
+                }
+                
+            }
+            else
+            {
+                a = b = baseString.Length;
+                while (currentWordIndex < factor)
+                {
+                    b = a;
+                    while (b > 0 && !Char.IsLetterOrDigit(baseString[b - 1]))
+                    {
+                        b--;
+                    }
+
+                    if (b <= 0) return baseString;
+
+                    a = b;
+                    while (a > 0 && Char.IsLetterOrDigit(baseString[a - 1]))
+                    {
+                        a--;
+                    }
+
+                    currentWordIndex++;
+                }
+            }
+            return String.Concat(baseString.Substring(0, a), replacement, baseString.Substring(b));
         }
     }
 
