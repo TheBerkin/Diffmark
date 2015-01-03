@@ -56,6 +56,13 @@ Multiple `-` symbols delete more characters.
 
 > `trapped` + `sn--` = `snapped`
 
+###`*` (Replace word)
+Replaces a word at the start or end of the base string.
+
+> `I like fixing bugs.` + `HATE**` = `I HATE fixing bugs.`
+
+> `black bear` + `*hole` = `black hole`
+
 ###`;` (Statement separator)
 Separate distinct patterns to apply several consecutive transformations.
 
