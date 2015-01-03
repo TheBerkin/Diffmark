@@ -10,12 +10,12 @@ namespace Diffmark
     /// </summary>
     public sealed class Diff
     {
-        private static readonly Dictionary<char, DiffRuleType> RuleMap = new Dictionary<char, DiffRuleType>()
+        private static readonly Dictionary<DM, DiffRuleType> RuleMap = new Dictionary<DM, DiffRuleType>()
         {
-            {'*', DiffRuleType.ReplaceWord},
-            {'-', DiffRuleType.Subtract},
-            {'+', DiffRuleType.Add}  
-        }; 
+            {DM.ReplaceWord, DiffRuleType.ReplaceWord},
+            {DM.Subtract, DiffRuleType.Subtract},
+            {DM.Add, DiffRuleType.Add}
+        };
 
         private readonly string _patternString;
         private readonly Rule[] _rules;
@@ -27,7 +27,7 @@ namespace Diffmark
             public readonly DiffRuleType Type;
             public readonly int Factor;
 
-            public Rule(string concatString, bool prepend, DiffRuleType type, int factor)
+            private Rule(string concatString, bool prepend, DiffRuleType type, int factor)
             {
                 ConcatString = concatString;
                 Prepend = prepend;
@@ -35,18 +35,15 @@ namespace Diffmark
                 Factor = factor;
             }
 
-            public static Rule Parse(string ruleString)
+            public static Rule Parse(Token[] tokens)
             {
-                if (String.IsNullOrWhiteSpace(ruleString)) return null;
                 DiffRuleType ruleType;
-                ruleString = ruleString.Trim();
-                char opChar;
-                bool prepend = !RuleMap.TryGetValue(opChar = ruleString[0], out ruleType);
-                if (prepend && !RuleMap.TryGetValue(opChar = ruleString[ruleString.Length - 1], out ruleType))
+                DM op;
+                bool prepend = !RuleMap.TryGetValue(op = tokens[0].Type, out ruleType);
+                if (prepend && !RuleMap.TryGetValue(op = tokens[tokens.Length - 1].Type, out ruleType))
                 {
                     prepend = false;
                     ruleType = DiffRuleType.Add;
-                    opChar = '+';
                 }
 
                 int factor = 0;
@@ -54,12 +51,12 @@ namespace Diffmark
                 if (ruleType != DiffRuleType.Add)
                 {
                     if (prepend)
-                    {   
-                        factor += ruleString.Reverse().TakeWhile(t => t == opChar).Count();
+                    {
+                        factor += tokens.Reverse().TakeWhile(t => t.Type == op).Count();
                     }
                     else
                     {
-                        factor += ruleString.TakeWhile(t => t == opChar).Count();
+                        factor += tokens.TakeWhile(t => t.Type == op).Count();
                     }
                 }
                 else
@@ -67,7 +64,18 @@ namespace Diffmark
                     factor++;
                 }
 
-                return new Rule(prepend ? ruleString.TrimEnd(opChar) : ruleString.TrimStart(opChar), prepend, ruleType, factor);
+                var sb = new StringBuilder();
+
+                foreach (var token in 
+                    tokens.SkipWhile(t => RuleMap.ContainsKey(t.Type))
+                        .Reverse()
+                        .SkipWhile(t => RuleMap.ContainsKey(t.Type))
+                        .Reverse())
+                {
+                    sb.Append(token.Value);
+                }
+
+                return new Rule(sb.ToString(), prepend, ruleType, factor);
             }
         }
 
@@ -94,7 +102,7 @@ namespace Diffmark
                 throw new ArgumentException("Pattern string cannot be null nor empty.");
 
             _patternString = patternString;
-            _rules = SplitStatements(patternString).Select(Rule.Parse).ToArray();
+            _rules = Lexer.Lex(patternString).Select(tokens => Rule.Parse(tokens.ToArray())).ToArray();
         }
 
         /// <summary>
@@ -139,50 +147,6 @@ namespace Diffmark
         {
             if (factor > baseString.Length) return String.Empty;
             return prepend ? baseString.Substring(factor) : baseString.Substring(0, baseString.Length - factor);
-        }
-
-        internal static IEnumerable<string> SplitStatements(string pattern)
-        {
-            if (String.IsNullOrWhiteSpace(pattern)) yield break;
-            int end = 0;
-            int length = pattern.Length;
-            var sb = new StringBuilder();
-            while (end < length)
-            {
-                switch (pattern[end])
-                {
-                    case '\\':
-                        end++;
-                        sb.Append(Escape(pattern[end++]));
-                        break;
-                    case ';':
-                        yield return sb.ToString();
-                        sb.Clear();
-                        end++;
-                        break;
-                    default:
-                        sb.Append(pattern[end++]);
-                        break;
-                }
-            }
-            if (sb.Length > 0) yield return sb.ToString();
-        }
-
-        internal static char Escape(char escapeChar)
-        {
-            switch (escapeChar)
-            {
-                case 'n':
-                    return '\n';
-                case 's':
-                    return ' ';
-                case 'r':
-                    return '\r';
-                case 't':
-                    return '\t';
-                default:
-                    return escapeChar;
-            }
         }
     }
 }
