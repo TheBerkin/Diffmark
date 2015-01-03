@@ -11,7 +11,7 @@ One obvious example of this is dictionaries. Suppose you have a list of nouns th
 > embolus/emboli
 ...
 ```
-Both forms are most often almost identical; re-entering most of the same string both messy and a waste of space.
+Both forms are most often almost identical; re-entering most of the same string is both messy and a waste of space.
 Let's rewrite the same three nouns with Diffmark patterns that change the singular form to the plural form:
 ```
 > fireman/--en
