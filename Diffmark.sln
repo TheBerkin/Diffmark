@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22310.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diffmark", "Diffmark\Diffmark.csproj", "{F39261D5-37F0-4247-9E45-EDD71AF653EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diffmark.Tests", "Diffmark.Tests\Diffmark.Tests.csproj", "{90E3125A-29B2-437B-B788-1E423ED99F67}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F39261D5-37F0-4247-9E45-EDD71AF653EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F39261D5-37F0-4247-9E45-EDD71AF653EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F39261D5-37F0-4247-9E45-EDD71AF653EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F39261D5-37F0-4247-9E45-EDD71AF653EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90E3125A-29B2-437B-B788-1E423ED99F67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90E3125A-29B2-437B-B788-1E423ED99F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90E3125A-29B2-437B-B788-1E423ED99F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90E3125A-29B2-437B-B788-1E423ED99F67}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
