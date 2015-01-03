@@ -97,6 +97,11 @@ namespace Diffmark
             _rules = SplitStatements(patternString).Select(Rule.Parse).ToArray();
         }
 
+        /// <summary>
+        /// Applies the pattern to a string.
+        /// </summary>
+        /// <param name="baseString">The string to apply the pattern to.</param>
+        /// <returns></returns>
         public string Mark(string baseString)
         {
             foreach (var rule in _rules)
@@ -119,6 +124,12 @@ namespace Diffmark
             return baseString;
         }
 
+        /// <summary>
+        /// Transforms one string to another.
+        /// </summary>
+        /// <param name="baseString">The base string to transform.</param>
+        /// <param name="pattern">The Diffmark pattern to apply to the string.</param>
+        /// <returns></returns>
         public static string Mark(string baseString, string pattern)
         {
             return new Diff(pattern).Mark(baseString);
