@@ -10,82 +10,8 @@ namespace Diffmark
     /// </summary>
     public sealed class Diff
     {
-        private static readonly Dictionary<DM, DiffRuleType> RuleMap = new Dictionary<DM, DiffRuleType>()
-        {
-            {DM.ReplaceWord, DiffRuleType.ReplaceWord},
-            {DM.Subtract, DiffRuleType.Subtract},
-            {DM.Add, DiffRuleType.Add}
-        };
-
         private readonly string _patternString;
         private readonly Rule[] _rules;
-
-        internal class Rule
-        {
-            public readonly string ConcatString;
-            public readonly bool Prepend;
-            public readonly DiffRuleType Type;
-            public readonly int Factor;
-
-            private Rule(string concatString, bool prepend, DiffRuleType type, int factor)
-            {
-                ConcatString = concatString;
-                Prepend = prepend;
-                Type = type;
-                Factor = factor;
-            }
-
-            public static Rule Parse(Token[] tokens)
-            {
-                DiffRuleType ruleType;
-                DM op;
-                bool prepend = !RuleMap.TryGetValue(op = tokens[0].Type, out ruleType);
-                if (prepend && !RuleMap.TryGetValue(op = tokens[tokens.Length - 1].Type, out ruleType))
-                {
-                    prepend = false;
-                    ruleType = DiffRuleType.Add;
-                }
-
-                int factor = 0;
-
-                if (ruleType != DiffRuleType.Add)
-                {
-                    if (prepend)
-                    {
-                        factor += tokens.Reverse().TakeWhile(t => t.Type == op).Count();
-                    }
-                    else
-                    {
-                        factor += tokens.TakeWhile(t => t.Type == op).Count();
-                    }
-                }
-                else
-                {
-                    factor++;
-                }
-
-                var sb = new StringBuilder();
-
-                foreach (var token in 
-                    tokens.SkipWhile(t => RuleMap.ContainsKey(t.Type))
-                        .Reverse()
-                        .SkipWhile(t => RuleMap.ContainsKey(t.Type))
-                        .Reverse())
-                {
-                    sb.Append(token.Value);
-                }
-
-                return new Rule(sb.ToString(), prepend, ruleType, factor);
-            }
-        }
-
-        internal enum DiffRuleType
-        {
-            Add,
-            Subtract,
-            ReplaceWord
-        }
-
 
         /// <summary>
         /// The pattern string for the diff.
@@ -148,5 +74,184 @@ namespace Diffmark
             if (factor > baseString.Length) return String.Empty;
             return prepend ? baseString.Substring(factor) : baseString.Substring(0, baseString.Length - factor);
         }
+    }
+
+    internal class Rule
+    {
+        private static readonly Dictionary<DM, DiffRuleType> RuleMap = new Dictionary<DM, DiffRuleType>()
+        {
+            {DM.ReplaceWord, DiffRuleType.ReplaceWord},
+            {DM.Subtract, DiffRuleType.Subtract},
+            {DM.Add, DiffRuleType.Add}
+        };
+
+        public readonly string ConcatString;
+        public readonly bool Prepend;
+        public readonly DiffRuleType Type;
+        public readonly int Factor;
+
+        private Rule(string concatString, bool prepend, DiffRuleType type, int factor)
+        {
+            ConcatString = concatString;
+            Prepend = prepend;
+            Type = type;
+            Factor = factor;
+        }
+
+        public static Rule Parse(Token[] tokens)
+        {
+            DiffRuleType ruleType;
+            DM op;
+            bool prepend = !RuleMap.TryGetValue(op = tokens[0].Type, out ruleType);
+            if (prepend && !RuleMap.TryGetValue(op = tokens[tokens.Length - 1].Type, out ruleType))
+            {
+                prepend = false;
+                ruleType = DiffRuleType.Add;
+            }
+
+            int factor = 0;
+
+            if (ruleType != DiffRuleType.Add)
+            {
+                if (prepend)
+                {
+                    factor += tokens.Reverse().TakeWhile(t => t.Type == op).Count();
+                }
+                else
+                {
+                    factor += tokens.TakeWhile(t => t.Type == op).Count();
+                }
+            }
+            else
+            {
+                factor++;
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var token in
+                tokens.SkipWhile(t => RuleMap.ContainsKey(t.Type))
+                    .Reverse()
+                    .SkipWhile(t => RuleMap.ContainsKey(t.Type))
+                    .Reverse())
+            {
+                sb.Append(token.Value);
+            }
+
+            return new Rule(sb.ToString(), prepend, ruleType, factor);
+        }
+    }
+
+    internal enum DiffRuleType
+    {
+        Add,
+        Subtract,
+        ReplaceWord
+    }
+
+    internal static class Lexer
+    {
+        private static IEnumerable<Token> GetTokens(string patternString)
+        {
+            patternString = patternString.Trim();
+            var text = new StringBuilder();
+            Token nextToken = null;
+            for (int i = 0; i < patternString.Length; i++)
+            {
+                switch (patternString[i])
+                {
+                    case '\\':
+                        nextToken = new Token(DM.Escape, Escape(patternString[++i]).ToString());
+                        break;
+                    case '+':
+                        nextToken = new Token(DM.Add, "+");
+                        break;
+                    case '-':
+                        nextToken = new Token(DM.Subtract, "-");
+                        break;
+                    case '*':
+                        nextToken = new Token(DM.ReplaceWord, "*");
+                        break;
+                    case ';':
+                        nextToken = new Token(DM.Delimiter, ";");
+                        break;
+                    case ' ':
+                        if (text.Length > 0) goto default;
+                        continue;
+                    default:
+                        text.Append(patternString[i]);
+                        continue;
+                }
+                if (text.Length > 0)
+                {
+                    yield return new Token(DM.Text, text.ToString().Trim());
+                    text.Clear();
+                }
+                yield return nextToken;
+                nextToken = null;
+            }
+            if (text.Length > 0)
+            {
+                yield return new Token(DM.Text, text.ToString().Trim());
+            }
+        }
+
+        public static IEnumerable<IEnumerable<Token>> Lex(string patternString)
+        {
+            var tokens = GetTokens(patternString);
+            var list = new List<Token>();
+            foreach (var token in tokens)
+            {
+                if (token.Type == DM.Delimiter && list.Any())
+                {
+                    yield return list.ToArray();
+                    list.Clear();
+                }
+                else
+                {
+                    list.Add(token);
+                }
+            }
+            if (list.Any()) yield return list.ToArray();
+        }
+
+        internal static char Escape(char escapeChar)
+        {
+            switch (escapeChar)
+            {
+                case 'n':
+                    return '\n';
+                case 's':
+                    return ' ';
+                case 'r':
+                    return '\r';
+                case 't':
+                    return '\t';
+                default:
+                    return escapeChar;
+            }
+        }
+    }
+
+    internal class Token
+    {
+        public readonly DM Type;
+        public readonly string Value;
+
+        public Token(DM type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
+    }
+
+    internal enum DM
+    {
+        Add,
+        Subtract,
+        ReplaceWord,
+        Escape,
+        Text,
+        Delimiter
     }
 }
