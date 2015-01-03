@@ -26,9 +26,7 @@ string plural = Diff.Mark("fireman", "--en"); // "firemen"
 ##Syntax
 A string with no symbols is just added to the end of the base string.
 
-> Hello `\sworld`
->
-> Hello world
+> `Hello` + `\sworld` = `Hello world`
 
 ###`\` (Escape)
 Escapes the next character. Example: `\+` -> `+`
