@@ -16,7 +16,7 @@ Let's rewrite the same three nouns with Diffmark patterns that change the singul
 ```
 > fireman/--en
 > king penguin/+s
-> embolus/-i
+> embolus/--i
 ```
 In the Diffmark library, these string/pattern pairs can be processed with a simple line of code to get the plural form:
 ```cs
