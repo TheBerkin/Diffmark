@@ -22,6 +22,10 @@ In the Diffmark library, these string/pattern pairs can be processed with a simp
 ```cs
 string plural = Diff.Mark("fireman", "--en"); // "firemen"
 ```
+You can also derive a Diffmark pattern from two strings:
+```cs
+string diffmark = Diff.Derive("fathom", "unfathomable"); // "un+;able"
+```
 
 ##Syntax
 A string with no symbols is just added to the end of the base string.
