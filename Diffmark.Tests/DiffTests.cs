@@ -40,5 +40,33 @@ namespace Diffmark.Tests
         {
             Assert.AreEqual(expected, Diff.ReplaceWord(baseString, replacement, factor, false));
         }
+
+        [TestCase("qabcdef", "abcdg", "abcd")]
+        public void LongestCommonSubstring(string a, string b, string converged)
+        {
+            int ia, ib, l;
+            Assert.IsTrue(Diff.LongestCommonSubstring(a, b, out ia, out ib, out l));
+            Assert.AreEqual(converged, a.Substring(ia, l));
+            Assert.AreEqual(converged, b.Substring(ib, l));
+        }
+
+        [TestCase("punch", "punching", "ing")]
+        [TestCase("alight", "flight", "f-")]
+        [TestCase("sun", "sub", "-b")]
+        [TestCase("wind", "unwind", "un+")]
+        [TestCase("embolus", "emboli", "--i")]
+        [TestCase("dance", "dancing", "-ing")]
+        [TestCase("black", "slack", "s-")]
+        [TestCase("fall", "winter", "*winter")]
+        [TestCase("fathom", "unfathomable", "un+;able")]
+        [TestCase("unreachable", "teacher", "t---;----er")]
+        [TestCase("dislike", "liked", "|---;d")]
+        [TestCase("aaacaaaa", "baaac", "b+;----")]
+        public void Deriving(string before, string after, string expectedPattern)
+        {
+            var derived = Diff.Derive(before, after);
+            Assert.AreEqual(derived, expectedPattern);
+            Assert.AreEqual(Diff.Mark(before, derived), after);
+        }
     }
 }
