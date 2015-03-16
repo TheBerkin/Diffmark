@@ -54,6 +54,13 @@ Multiple `-` symbols delete more characters.
 
 > `trapped` + `sn--` = `snapped`
 
+###`|` (Anchor)
+Enables deletion from the start of a string when no prefix is available.
+
+> `disliked` + `|---` = `liked`
+
+> `counterattack` + `|-------` = `attack`
+
 ###`*` (Replace word)
 Replaces a word at the start or end of the base string.
 
